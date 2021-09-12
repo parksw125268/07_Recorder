@@ -2,6 +2,7 @@ package com.example.a07_recorder
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -19,7 +20,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var recorder:MediaRecorder?= null
-    private var state = State.BEFORE_RECORDING
+    private var player : MediaPlayer?=null
+    private var state = State.BEFORE_RECORDING // State.~~ 를 하게되면 아래 set코드가 발동!
+        set(value) {
+            field = value //field는 state, value는 State.~~~
+            recordButton.updateIconWithState(value)
+        }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -48,6 +54,16 @@ class MainActivity : AppCompatActivity() {
     private fun initViews(){
         recordButton.updateIconWithState(state)
     }
+    private fun bindViews(){
+        recordButton.setOnClickListener {
+            when(state){
+                State.BEFORE_RECORDING->startRecording()
+                State.ON_RECORDING->stopRecording()
+                State.AFTER_RECORDING->startPlaying()
+                State.ON_PLAYING->stopPlaying()
+            }
+        }
+    }
 
     private fun startRecording(){
         recorder = MediaRecorder().run { //apply말고 한번 run의 개념 이해를 위해 run으로 시도해봄.
@@ -59,6 +75,7 @@ class MainActivity : AppCompatActivity() {
             this //run은 맨마지막 값을 반환하므로 this를 써줌.
         }
         recorder?.start() //실제 녹음 시작.
+        state = State.ON_RECORDING
     }
 
     private fun stopRecording(){
@@ -67,7 +84,23 @@ class MainActivity : AppCompatActivity() {
             release()//메모리 해제
         }
         recorder = null
+        state=State.AFTER_RECORDING
     }
+
+    private fun startPlaying(){
+        player  = MediaPlayer().apply {
+            setDataSource(recordingFilePath)
+            prepare() //:온전히 재생하기위해서 데이터를 가져올때 까지 기다림 vs prepareasync 스트리밍 할때 방식
+        }
+        player?.start()
+        state = State.ON_PLAYING
+    }
+    private fun stopPlaying(){
+        player?.release()
+        player = null
+        state = State.AFTER_RECORDING
+    }
+
     companion object{ //자바의 상수와 같은 것
         private const val REQUEST_RECORD_AUDIO_PERMISSION = 201
     }
