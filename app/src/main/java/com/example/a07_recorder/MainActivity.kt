@@ -6,9 +6,13 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
 
 class MainActivity : AppCompatActivity() {
 
+    private val resetButton : Button by lazy {
+        findViewById(R.id.resetButton)
+    }
 
     private val recordButton : RecordButton by lazy {
         findViewById<RecordButton>(R.id.recordButton)
@@ -24,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private var state = State.BEFORE_RECORDING // State.~~ 를 하게되면 아래 set코드가 발동!
         set(value) {
             field = value //field는 state, value는 State.~~~
+            resetButton.isEnabled = value == State.AFTER_RECORDING || value == State.ON_PLAYING
             recordButton.updateIconWithState(value)
         }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +37,8 @@ class MainActivity : AppCompatActivity() {
 
         requestAudioPermission() //앱 시작하자마자 ㄱㄱ
         initViews()
+        bindViews()
+        initVariables()
     }
 
     override fun onRequestPermissionsResult( //generate override
@@ -54,7 +61,15 @@ class MainActivity : AppCompatActivity() {
     private fun initViews(){
         recordButton.updateIconWithState(state)
     }
+    private fun initVariables(){
+        state = State.BEFORE_RECORDING
+    }
     private fun bindViews(){
+        resetButton.setOnClickListener{
+            stopPlaying()
+            state=State.BEFORE_RECORDING
+        }
+
         recordButton.setOnClickListener {
             when(state){
                 State.BEFORE_RECORDING->startRecording()
