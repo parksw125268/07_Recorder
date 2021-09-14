@@ -9,6 +9,9 @@ import android.os.Bundle
 import android.widget.Button
 
 class MainActivity : AppCompatActivity() {
+    private val soundVisualizerView : SoundVisualizerView by lazy{
+        findViewById(R.id.soundVisualizeView)
+    }
 
     private val resetButton : Button by lazy {
         findViewById(R.id.resetButton)
@@ -23,7 +26,7 @@ class MainActivity : AppCompatActivity() {
         "${externalCacheDir?.absolutePath}/recording.3gp"
     }
 
-    private var recorder:MediaRecorder?= null
+    private var recorder : MediaRecorder?= null
     private var player : MediaPlayer?=null
     private var state = State.BEFORE_RECORDING // State.~~ 를 하게되면 아래 set코드가 발동!
         set(value) {
@@ -65,6 +68,10 @@ class MainActivity : AppCompatActivity() {
         state = State.BEFORE_RECORDING
     }
     private fun bindViews(){
+        soundVisualizerView.onRequestCurrentAmplitude = { //콜백 함수에 back함수
+            recorder?.maxAmplitude ?: 0 //진폭값이 있으면 진폭값의 max를 받아오고 null이면 0을 리턴함.
+        }
+
         resetButton.setOnClickListener{
             stopPlaying()
             state=State.BEFORE_RECORDING
@@ -90,6 +97,7 @@ class MainActivity : AppCompatActivity() {
             this //run은 맨마지막 값을 반환하므로 this를 써줌.
         }
         recorder?.start() //실제 녹음 시작.
+        soundVisualizerView.startVisualizing(false)
         state = State.ON_RECORDING
     }
 
@@ -98,6 +106,7 @@ class MainActivity : AppCompatActivity() {
             stop()//녹음 멈춤.
             release()//메모리 해제
         }
+        soundVisualizerView.stopVisualizing()
         recorder = null
         state=State.AFTER_RECORDING
     }
@@ -108,11 +117,13 @@ class MainActivity : AppCompatActivity() {
             prepare() //:온전히 재생하기위해서 데이터를 가져올때 까지 기다림 vs prepareasync 스트리밍 할때 방식
         }
         player?.start()
+        soundVisualizerView.startVisualizing(true)
         state = State.ON_PLAYING
     }
     private fun stopPlaying(){
         player?.release()
         player = null
+        soundVisualizerView.stopVisualizing()
         state = State.AFTER_RECORDING
     }
 
