@@ -16,7 +16,9 @@ class MainActivity : AppCompatActivity() {
     private val resetButton : Button by lazy {
         findViewById(R.id.resetButton)
     }
-
+    private val recordTimeTextView : CountUpView by lazy{
+        findViewById(R.id.recordTimeTextView)
+    }
     private val recordButton : RecordButton by lazy {
         findViewById<RecordButton>(R.id.recordButton)
     }
@@ -97,6 +99,7 @@ class MainActivity : AppCompatActivity() {
             this //run은 맨마지막 값을 반환하므로 this를 써줌.
         }
         recorder?.start() //실제 녹음 시작.
+        recordTimeTextView.startCountUp()
         soundVisualizerView.startVisualizing(false)
         state = State.ON_RECORDING
     }
@@ -108,6 +111,8 @@ class MainActivity : AppCompatActivity() {
         }
         soundVisualizerView.stopVisualizing()
         recorder = null
+
+        recordTimeTextView.stopCountUp()
         state=State.AFTER_RECORDING
     }
 
@@ -117,6 +122,7 @@ class MainActivity : AppCompatActivity() {
             prepare() //:온전히 재생하기위해서 데이터를 가져올때 까지 기다림 vs prepareasync 스트리밍 할때 방식
         }
         player?.start()
+        recordTimeTextView.startCountUp()
         soundVisualizerView.startVisualizing(true)
         state = State.ON_PLAYING
     }
@@ -124,6 +130,7 @@ class MainActivity : AppCompatActivity() {
         player?.release()
         player = null
         soundVisualizerView.stopVisualizing()
+        recordTimeTextView.stopCountUp()
         state = State.AFTER_RECORDING
     }
 
