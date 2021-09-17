@@ -73,9 +73,10 @@ class MainActivity : AppCompatActivity() {
         soundVisualizerView.onRequestCurrentAmplitude = { //콜백 함수에 back함수
             recorder?.maxAmplitude ?: 0 //진폭값이 있으면 진폭값의 max를 받아오고 null이면 0을 리턴함.
         }
-
         resetButton.setOnClickListener{
             stopPlaying()
+            soundVisualizerView.clearVisualization()
+            recordTimeTextView.clearCountTime()
             state=State.BEFORE_RECORDING
         }
 
@@ -120,6 +121,12 @@ class MainActivity : AppCompatActivity() {
         player  = MediaPlayer().apply {
             setDataSource(recordingFilePath)
             prepare() //:온전히 재생하기위해서 데이터를 가져올때 까지 기다림 vs prepareasync 스트리밍 할때 방식
+        }
+
+        //녹음한것 재생이 다 되면.
+        player?.setOnCompletionListener {
+            stopPlaying()
+            state = State.BEFORE_RECORDING
         }
         player?.start()
         recordTimeTextView.startCountUp()
